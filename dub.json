@@ -9,6 +9,6 @@
 	"targetPath": "bin",
 	"targetType": "executable",
 	"dependencies": {
-		"consoled": "~>1.0.4"
+		"colorize": "~>1.0.5"
 	}
 }
