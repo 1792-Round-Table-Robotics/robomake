@@ -6,6 +6,7 @@ import consoled;
  */
 void writeInfo(in string message) @trusted {
     writecln(Fg.cyan, "[INFO]: ", FontStyle.bold, Fg.white, message);
+    resetFontStyle();
     resetColors();
 }
 
@@ -14,6 +15,7 @@ void writeInfo(in string message) @trusted {
  */
 void writeWarning(in string message) @trusted {
     writecln(Fg.yellow, "[WARN]: ", FontStyle.bold, Fg.white, message);
+    resetFontStyle();
     resetColors();
 }
 
@@ -22,5 +24,6 @@ void writeWarning(in string message) @trusted {
  */
 void writeError(in string message) @trusted {
     writecln(Fg.red, "[ERROR]: ", FontStyle.bold, Fg.lightRed, message);
+    resetFontStyle();
     resetColors();
 }
