@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"colorize": "1.0.5"
+		"colorize": "1.0.5",
+		"libssh-d": "0.7.3-4"
 	}
 }

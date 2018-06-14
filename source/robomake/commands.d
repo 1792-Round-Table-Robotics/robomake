@@ -2,26 +2,42 @@ module robomake.commands;
 
 import std.stdio : readln;
 import std.system;
+import std.compiler;
 import std.string;
 import std.conv;
 import std.getopt;
-import std.file : write, exists;
+import std.file : write, readText, exists;
+import std.datetime.stopwatch;
+
+import core.cpuid;
 
 import robomake.console;
 import robomake.cmake;
+import robomake.build;
 
+/// The name of the software
 immutable string softwareName = "Robomake";
+/// Software version
 immutable string softwareVersion = "v1.0.0";
 debug {
+    /// If we are running a debug or release build
     immutable string debug_ = "DEBUG";
 } else {
+    /// If we are running a debug or release build
     immutable string debug_ = "RELEASE";
 }
 
+/// Processes the "version" command
 void processVersionCommand() @safe {
-    writeInfo(softwareName ~ " " ~ softwareVersion ~ " " ~ debug_ ~ " on " ~ to!string(os));
+    writeInfo(softwareName ~ " " ~ softwareVersion ~ 
+        " " ~ debug_ ~ " on " ~ to!string(os) ~ " (built with " ~ name ~ ")");
+
+    writeInfo("CPU:             " ~ processor());
+    writeInfo("Cores Per CPU:   " ~ to!string(coresPerCPU()));
+    writeInfo("Threads per CPU: " ~ to!string(threadsPerCPU()));
 }
 
+/// Processes the "help" command
 void processHelpCommand() @safe {
     writeInfo("Usage: \"robomake [command] [options]\"");
     writeInfo("Avaliable commands:");
@@ -34,10 +50,11 @@ void processHelpCommand() @safe {
     writeInfo("Example: \"robomake create --help\"");
 }
 
+/// Processes the "create" command
 bool processCreateCommand(string[] args) @trusted {
-    bool help;
-    string name;
-    bool testing;
+    bool help; // If the user typed in --help
+    string name; // The name of the project, from --name=Name
+    bool testing; // The
 
     getopt(args,
         "help", &help,
@@ -72,10 +89,32 @@ bool processCreateCommand(string[] args) @trusted {
 
     writeInfo("Creating project " ~ name ~ " (testing=" ~ to!string(testing) ~ ")");
 
-    write(".robomake", "lock"); // Create our robomake lockfile
+    write(".robomake", name); // Create our robomake lockfile
 
     createCMakeProjectFiles(name, testing);
     writeInfo("Done!");
 
     return true;
+}
+
+/// Processes the "build" command
+bool processBuildCommand() @trusted {
+    if(!exists(".robomake")) {
+        writeError("Failed to find \".robomake\" file! There doesn't appear to be a project in this directory.");
+        writeError("Think this is a mistake? Create a \".robomake\" file in the current directory with the project");
+        writeError("name inside, then rerun this command.");
+        return false;
+    }
+
+    immutable auto projectName = readText(".robomake");
+
+    writeInfo("Building project \"" ~ projectName ~ "\"...");
+
+    auto sw = StopWatch();
+    sw.start();
+    auto result = buildProject();
+    sw.stop();
+
+    if (result) writeInfo("Build complete! (Done in " ~ to!string(sw.peek.total!"msecs") ~ "ms)");
+    return result;
 }

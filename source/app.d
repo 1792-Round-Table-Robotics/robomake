@@ -29,14 +29,19 @@ int main(string[] args) @system {
 private bool processPrimaryCommand(string[] args) @safe {
 	immutable auto primaryCommand = args[1]; // First argument is always the executable
 	switch(primaryCommand) {
+		case "--version":
 		case "version":
 			processVersionCommand();
 			break;
+		case "--help":
 		case "help":
 			processHelpCommand();
 			break;
+
 		case "create":
 			return processCreateCommand(args);
+		case "build":
+			return processBuildCommand();
 		default:
 			writeError("Failed to process primary command! First argument must be a valid command!");
 			writeError("Please run \"robomake help\" to see command options.");
