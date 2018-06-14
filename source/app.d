@@ -6,8 +6,18 @@ import robomake.commands;
 
 int main(string[] args) @system {
 	if(args.length > 1) {
-		if(processPrimaryCommand(args)) {
-			return 0;
+		try {
+			if(processPrimaryCommand(args)) {
+				return 0;
+			}
+		} catch(Exception e) {
+			writeError("Oh no! Something went wrong!");
+			writeError("Caught exception: " ~ e.msg ~ " [in " ~ e.file ~ " at line " ~ to!string(e.line) ~ "]");
+			debug write(e.toString());
+			else {
+				writeWarning("Stack trace not printed as this is a release build.");
+			}
+			return 1;
 		}
 		return 1;
 	} else {
@@ -26,8 +36,7 @@ private bool processPrimaryCommand(string[] args) @safe {
 			processHelpCommand();
 			break;
 		case "create":
-			processCreateCommand(args);
-			break;
+			return processCreateCommand(args);
 		default:
 			writeError("Failed to process primary command! First argument must be a valid command!");
 			writeError("Please run \"robomake help\" to see command options.");

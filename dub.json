@@ -10,5 +10,8 @@
 	"targetType": "executable",
 	"dependencies": {
 		"colorize": "~>1.0.5"
-	}
+	},
+	"libs": [
+		"curl"
+	]
 }

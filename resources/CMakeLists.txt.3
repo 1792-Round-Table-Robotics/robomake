@@ -1,0 +1,11 @@
+# Tests ----------------------------------------------------
+if(testing)
+    enable_testing()
+
+    # Add our test executable
+    add_executable(ExampleTest test/ExampleTest.cpp)
+    # Link with Google Test
+    target_link_libraries(ExampleTest gtest gtest_main)
+    # Add the test to cmake.
+    add_test(NAME example_test COMMAND ExampleTest)
+endif(testing)
