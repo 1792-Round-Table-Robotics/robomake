@@ -2,6 +2,7 @@ module robomake.commands;
 
 import std.stdio : readln;
 import std.system;
+import std.string;
 import std.conv;
 import std.getopt;
 import std.file : write, exists;
@@ -62,7 +63,7 @@ bool processCreateCommand(string[] args) @trusted {
     if(exists("CMakeLists.txt") || exists(".robomake")) {
         writeWarning("There appears to be a project already here. Are you sure you want to proceed? [y/N]");
         auto val = readln();
-        if(val != "y") {
+        if(val.strip().toLower() != "y") {
             // Abort
             writeInfo("Aborting.");
             return true;
