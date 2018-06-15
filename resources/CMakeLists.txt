@@ -18,3 +18,10 @@ set (SOURCES
 find_package(WPILib REQUIRED)
 # Tell CMake to use the WPILib header files the script found.
 include_directories(${WPILib_INCLUDE_DIRS})
+
+# Add our code as an executable
+add_executable (Robot ${SOURCES})
+# Make sure our header files (like Robot.h) are included
+target_include_directories(Robot PRIVATE ${PROJECT_SOURCE_DIR}/include)
+# Link our executable with the WPILib libraries
+target_link_libraries (Robot ${WPILib_LIBRARIES})
