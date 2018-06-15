@@ -42,6 +42,8 @@ private bool processPrimaryCommand(string[] args) @safe {
 			return processCreateCommand(args);
 		case "build":
 			return processBuildCommand();
+		case "deploy":
+			return processDeployCommand();
 		default:
 			writeError("Failed to process primary command! First argument must be a valid command!");
 			writeError("Please run \"robomake help\" to see command options.");
