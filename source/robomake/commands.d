@@ -19,13 +19,36 @@ import robomake.build;
 /// The name of the software
 immutable string softwareName = "Robomake";
 /// Software version
-immutable string softwareVersion = "v1.0.0";
+immutable string softwareVersion = "v1.1.0";
 debug {
     /// If we are running a debug or release build
     immutable string debug_ = "DEBUG";
 } else {
     /// If we are running a debug or release build
     immutable string debug_ = "RELEASE";
+}
+
+/// Represents a project's information contained in the ".robomake" file
+struct ProjectInfo {
+    /// The project's name
+    string name;
+    /// The FRC team number
+    string teamNumber;
+}
+
+private bool checkForDotfile() @safe {
+    if(!exists(".robomake")) {
+        writeError("Failed to find \".robomake\" file! There doesn't appear to be a project in this directory.");
+        writeError("Think this is a mistake? Create a \".robomake\" file in the current directory with the project");
+        writeError("name inside, then rerun this command.");
+        return false;
+    }
+    return true;
+}
+
+private ProjectInfo getProjectInfo() @safe {
+    immutable auto contents = readText(".robomake").split(",");
+    return ProjectInfo(contents[0], contents[1]);
 }
 
 /// Processes the "version" command
@@ -46,6 +69,7 @@ void processHelpCommand() @safe {
     writeInfo("\tversion                  Displays version information.");
     writeInfo("\tcreate                   Creates a new project in the current directory.");
     writeInfo("\tbuild                    Builds the project in the current directory.");
+    writeInfo("\ttest                     Builds and runs tests for the current directory.");
     writeInfo("\tdeploy                   Deploys the project to a connected roboRIO.");
     writeInfo("To learn more about each command type the command followed by \"--help\"");
     writeInfo("Example: \"robomake create --help\"");
@@ -107,7 +131,7 @@ bool processCreateCommand(string[] args) @trusted {
     createCMakeProjectFiles(name, testing);
     writeInfo("Project creation complete, now running first build...");
 
-    processBuildCommand();
+    _processBuildCommand(false);
 
     writeInfo("Project is ready for use! :)");
 
@@ -115,29 +139,61 @@ bool processCreateCommand(string[] args) @trusted {
 }
 
 /// Processes the "build" command
-bool processBuildCommand() @trusted {
-    if(!exists(".robomake")) {
-        writeError("Failed to find \".robomake\" file! There doesn't appear to be a project in this directory.");
-        writeError("Think this is a mistake? Create a \".robomake\" file in the current directory with the project");
-        writeError("name inside, then rerun this command.");
-        return false;
+bool processBuildCommand(string[] args) @trusted {
+    bool tests; // If we should build tests, that means use native compiler and build only subsystems and test code.
+    bool help; // If we should display help information
+    getopt(args,
+        "tests", &tests,
+        "help", &help
+    );
+
+    if(help) {
+        writeInfo("Usage: \"robomake build --tests=[true|false]\"");
+        writeInfo("\t--tests             Optional. If true, then the project will only be built with subsystems");
+        writeInfo("\t                        and test code. It will use the native compiler instead of the cross-compiler\n");
+        writeInfo("\t--help              Displays this output.");
+        writeInfo("Example: \"robomake build --tests\"");
+        return true;
     }
 
-    immutable auto contents = readText(".robomake").split(",");
-    immutable auto projectName = contents[0];
-    immutable auto teamNumber = contents[1];
+    return _processBuildCommand(tests);
+}
 
-    writeInfo("Building project \"" ~ projectName ~ "\" (team " ~ teamNumber ~ ")...");
+private bool _processBuildCommand(in bool tests) @safe {
+    if(!checkForDotfile()) return false;
+    immutable auto projectInfo = getProjectInfo();
+
+    writeInfo("Building project \"" ~ projectInfo.name ~ "\" (team " ~ projectInfo.teamNumber ~ ")...");
+
+    if(tests) writeInfo("Notice: Building test code and subsystems ONLY, using native compiler.");
 
     auto sw = StopWatch();
     sw.start();
-    auto result = buildProject();
+    auto result = buildProject(tests);
     sw.stop();
 
     if (result) writeInfo("Build complete! (Done in " ~ to!string(sw.peek.total!"msecs") ~ "ms)");
     return result;
 }
 
-bool processDeployCommand() @trusted {
+/// Processes the "test" command
+bool processTestCommand() @trusted {
+    if(!checkForDotfile()) return false;
+    //immutable auto projectInfo = getProjectInfo();
+
+    /*writeInfo("Building tests for project \"" ~ projectInfo.name ~ "\" (team " ~ projectInfo.teamNumber ~ ")...");
+
+    if(!buildProject(true)) {
+        writeError("Error while building tests!");
+        return false;
+    }*/
+
+    writeInfo("Running tests...");
+    return runCTest();
+}
+
+/// Processes the "deploy" command
+bool processDeployCommand() @safe {
+    checkForDotfile();
     return true;
 }

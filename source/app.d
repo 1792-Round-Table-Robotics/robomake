@@ -41,7 +41,9 @@ private bool processPrimaryCommand(string[] args) @safe {
 		case "create":
 			return processCreateCommand(args);
 		case "build":
-			return processBuildCommand();
+			return processBuildCommand(args);
+		case "test":
+			return processTestCommand();
 		case "deploy":
 			return processDeployCommand();
 		default:
