@@ -131,11 +131,13 @@ bool processCreateCommand(string[] args) @trusted {
     createCMakeProjectFiles(name, testing);
     writeInfo("Project creation complete, now running first build...");
 
-    _processBuildCommand(false);
+    if(_processBuildCommand(false)) {
+        writeInfo("Project is ready for use! :)");
 
-    writeInfo("Project is ready for use! :)");
-
-    return true;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /// Processes the "build" command
