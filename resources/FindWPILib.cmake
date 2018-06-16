@@ -11,6 +11,9 @@ elseif (CMAKE_HOST_APPLE)
 elseif (CMAKE_HOST_UNIX)
     set (WPILIB_DIR ~/wpilib)
     message ("WPILib Directory is " ${WPILIB_DIR})
+else()
+    set (WPILIB_DIR ~/wpilib)
+    message(WARNING "The host operating system is unknown, setting WPILib directory to \"~/wpilib\"")
 endif (CMAKE_HOST_WIN32)
 
 # Find includes

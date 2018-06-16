@@ -1,6 +1,3 @@
-# To turn on append "-Dtesting=ON" to CMake command
-option(testing "Build and run all tests." OFF) # Makes testing option avaliable
-
 # Make sure CMake finds our FindWPILib.cmake script
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 # Export compile_commands.json so VSCode knows the include paths of all the library headers (including WPILib)
@@ -20,8 +17,8 @@ find_package(WPILib REQUIRED)
 include_directories(${WPILib_INCLUDE_DIRS})
 
 # Add our code as an executable
-add_executable (Robot ${SOURCES})
+add_executable (RobotProgram ${SOURCES})
 # Make sure our header files (like Robot.h) are included
-target_include_directories(Robot PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(RobotProgram PRIVATE ${PROJECT_SOURCE_DIR}/include)
 # Link our executable with the WPILib libraries
-target_link_libraries (Robot ${WPILib_LIBRARIES})
+target_link_libraries (RobotProgram ${WPILib_LIBRARIES})
