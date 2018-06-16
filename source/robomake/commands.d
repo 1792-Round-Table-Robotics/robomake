@@ -105,7 +105,11 @@ bool processCreateCommand(string[] args) @trusted {
     write(".robomake", name ~ "," ~ to!string(team)); // Create our robomake lockfile
 
     createCMakeProjectFiles(name, testing);
-    writeInfo("Done!");
+    writeInfo("Project creation complete, now running first build...");
+
+    processBuildCommand();
+
+    writeInfo("Project is ready for use! :)");
 
     return true;
 }

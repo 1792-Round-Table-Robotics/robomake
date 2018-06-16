@@ -7,7 +7,7 @@ set (CMAKE_CXX_STANDARD 14)
 
 # Create our SOURCES variable with all our C++ source files to compile
 # NOTICE: You must add all your source files to this variable! Just add a new line and the path for each file
-set (SOURCES 
+set (ROBOT_SOURCES 
     src/Robot.cpp
 )
 
@@ -17,7 +17,7 @@ find_package(WPILib REQUIRED)
 include_directories(${WPILib_INCLUDE_DIRS})
 
 # Add our code as an executable
-add_executable (RobotProgram ${SOURCES})
+add_executable (RobotProgram ${ROBOT_SOURCES})
 # Make sure our header files (like Robot.h) are included
 target_include_directories(RobotProgram PRIVATE ${PROJECT_SOURCE_DIR}/include)
 # Link our executable with the WPILib libraries
