@@ -5,6 +5,14 @@ import std.net.curl;
 
 import robomake.console;
 
+version(Windows) {
+    /// The type of CMake generator to use. We need MinGW on Windows, elsewhere we use Unix Makefiles
+    enum cmakeGenerator = "MinGW Makefiles";
+} else {
+    /// The type of CMake generator to use. We need MinGW on Windows, elsewhere we use Unix Makefiles
+    enum cmakeGenerator = "Unix Makefiles";
+}
+
 private void checkDirectory(string dir) {
     if(!exists(dir)) {
         mkdir(dir);

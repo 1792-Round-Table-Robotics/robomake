@@ -1,4 +1,4 @@
-import std.stdio;
+import std.stdio : writeln;
 import std.conv;
 
 import robomake.console;
@@ -13,7 +13,7 @@ int main(string[] args) @system {
 		} catch(Exception e) {
 			writeError("Oh no! Something went wrong!");
 			writeError("Caught exception: " ~ e.msg ~ " [in " ~ e.file ~ " at line " ~ to!string(e.line) ~ "]");
-			debug write(e.toString());
+			debug writeln(e.toString());
 			else {
 				writeWarning("Stack trace not printed as this is a release build.");
 			}

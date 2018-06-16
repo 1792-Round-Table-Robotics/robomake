@@ -9,15 +9,12 @@ static import std.stdio;
 import core.cpuid : threadsPerCPU;
 
 import robomake.console;
+import robomake.cmake : cmakeGenerator;
 
 version(Windows) {
-    /// The type of CMake generator to use. We need MinGW on Windows, elsewhere we use Unix Makefiles
-    enum cmakeGenerator = "MinGW Makefiles";
     /// The name of the GNU Make executable to use. On Windows we use MinGW
     enum makeExecutable = "mingw32-make";
 } else {
-    /// The type of CMake generator to use. We need MinGW on Windows, elsewhere we use Unix Makefiles
-    enum cmakeGenerator = "Unix Makefiles";
     /// The name of the GNU Make executable to use. On Windows we use MinGW
     enum makeExecutable = "make";
 }
@@ -27,23 +24,27 @@ enum normalBuildDir = "build";
 /// Directory where testing builds take place.
 enum testsBuildDir = "buildTests";
 
+private void switchDirectory(in bool tests) @safe {
+    immutable auto buildDir = tests ? testsBuildDir : normalBuildDir;
+    if(!exists(buildDir)) {
+        mkdir(buildDir);
+    }
+    chdir(buildDir);
+    writeInfo("Switched current directory to \"" ~ buildDir ~ "\"");
+}
+
 /// Runs the necessary commands to build a project in the current directory
 bool buildProject(in bool tests) @safe {
     immutable auto cmakeCommand = "cmake " ~ (tests ? "-DlocalTesting=ON" : "-DCMAKE_TOOLCHAIN_FILE=arm-frc-toolchain.cmake") ~
                                     " -G \"" ~ cmakeGenerator ~ "\" ..";
     immutable auto makeCommand = makeExecutable ~ " -j" ~ to!string(threadsPerCPU()); // -j[Number of threads our CPU has]
-    immutable auto buildDir = tests ? testsBuildDir : normalBuildDir;
 
     scope(exit) {
         chdir(".."); // Switch back to previous directory
         writeInfo("Switched back to previous directory.");
     }
 
-    if(!exists(buildDir)) {
-        mkdir(buildDir);
-    }
-    chdir(buildDir); // Switch our current directory to the "build" directory
-    writeInfo("Switched current directory to \"" ~ buildDir ~ "\"");
+    switchDirectory(tests); // Switch our current directory to the "build" directory
 
     writeInfo("Running CMake: " ~ cmakeCommand);
 
@@ -75,11 +76,7 @@ bool runCTest() @system {
         writeInfo("Switched back to previous directory.");
     }
 
-    if(!exists(testsBuildDir)) {
-        mkdir(testsBuildDir);
-    }
-    chdir(testsBuildDir);
-    writeInfo("Switched current directory to \"" ~ testsBuildDir ~ "\"");
+    switchDirectory(true);
 
     writeInfo("Running CTest: " ~ testCommand);
 
