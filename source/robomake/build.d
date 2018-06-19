@@ -11,11 +11,14 @@ import core.cpuid : threadsPerCPU;
 import robomake.console;
 import robomake.cmake : cmakeGenerator;
 
+/// The name of the CMake executable.
+enum cmakeExecutable = "cmake";
+
 version(Windows) {
     /// The name of the GNU Make executable to use. On Windows we use MinGW
     enum makeExecutable = "mingw32-make";
 } else {
-    /// The name of the GNU Make executable to use. On Windows we use MinGW
+    /// The name of the GNU Make executable to use. On OS's other than Windows we use the default "make".
     enum makeExecutable = "make";
 }
 
@@ -24,27 +27,22 @@ enum normalBuildDir = "build";
 /// Directory where testing builds take place.
 enum testsBuildDir = "buildTests";
 
-private void switchDirectory(in bool tests) @safe {
+/// Switches to the correct build directory based on the "testing" parameter, creating it if it doesn't exist.
+void switchToBuildDirectory(in bool tests) @safe {
     immutable auto buildDir = tests ? testsBuildDir : normalBuildDir;
     if(!exists(buildDir)) {
         mkdir(buildDir);
     }
     chdir(buildDir);
-    writeInfo("Switched current directory to \"" ~ buildDir ~ "\"");
+
+    debug writeInfo("Switched current directory to \"" ~ buildDir ~ "\"");
 }
 
-/// Runs the necessary commands to build a project in the current directory
-bool buildProject(in bool tests) @safe {
-    immutable auto cmakeCommand = "cmake " ~ (tests ? "-DlocalTesting=ON" : "-DCMAKE_TOOLCHAIN_FILE=arm-frc-toolchain.cmake") ~
+/// Runs CMake for the current directory.
+bool runCMake(in bool tests) @safe {
+    immutable auto cmakeCommand = cmakeExecutable ~ " " ~ 
+                                    (tests ? "-DlocalTesting=ON" : "-DCMAKE_TOOLCHAIN_FILE=arm-frc-toolchain.cmake") ~
                                     " -G \"" ~ cmakeGenerator ~ "\" ..";
-    immutable auto makeCommand = makeExecutable ~ " -j" ~ to!string(threadsPerCPU()); // -j[Number of threads our CPU has]
-
-    scope(exit) {
-        chdir(".."); // Switch back to previous directory
-        writeInfo("Switched back to previous directory.");
-    }
-
-    switchDirectory(tests); // Switch our current directory to the "build" directory
 
     writeInfo("Running CMake: " ~ cmakeCommand);
 
@@ -55,8 +53,15 @@ bool buildProject(in bool tests) @safe {
         return false;
     }
 
+    return true;
+}
+
+/// Runs Make for the current directory.
+bool runMake() @safe {
+    immutable auto makeCommand = makeExecutable ~ " -j" ~ to!string(threadsPerCPU()); // -j[Number of threads our CPU has]
+
     writeInfo("Running Make: " ~ makeCommand);
-    pid = spawnShell(makeCommand);
+    auto pid = spawnShell(makeCommand);
     if(wait(pid) != 0) {
         writeError("Build failure!");
         writeError("Make exited with non-zero exit code!");
@@ -67,8 +72,24 @@ bool buildProject(in bool tests) @safe {
     return true;
 }
 
+/// Runs the necessary commands to build a project in the current directory
+bool buildProject(in bool tests) @safe {
+    scope(exit) {
+        chdir(".."); // Switch back to previous directory
+        writeInfo("Switched back to previous directory.");
+    }
+
+    switchToBuildDirectory(tests); // Switch our current directory to the "build" directory
+
+    if(!runCMake(tests)) return false;
+
+    if(!runMake()) return false;
+
+    return true;
+}
+
 /// Runs tests for the project
-bool runCTest() @system {
+bool runCTest(in bool switchDirectory = true) @system {
     enum testCommand = makeExecutable ~ " all test"; // Compile if any changes were made, then run test
 
     scope(exit) {
@@ -76,7 +97,7 @@ bool runCTest() @system {
         writeInfo("Switched back to previous directory.");
     }
 
-    switchDirectory(true);
+    if(switchDirectory) switchToBuildDirectory(true);
 
     writeInfo("Running CTest: " ~ testCommand);
 

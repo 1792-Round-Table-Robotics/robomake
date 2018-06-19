@@ -34,6 +34,16 @@ struct ProjectInfo {
     string name;
     /// The FRC team number
     string teamNumber;
+    /// If CMake needs to be re-run for the project.
+    bool reconfigureNeeded = false;
+
+    static ProjectInfo getFromFile() @safe {
+        immutable auto contents = readText(".robomake").split(",");
+        return ProjectInfo(contents[0], contents[1], 
+                            (contents.length == 2 ? false : true)); // Checks if a third component is in the .robomake file
+        // Ex. Project,1714,rebuild (would set "reconfigureNeeded" to true)
+        // Ex. Project,1714 (would not set to true)
+    }
 }
 
 private bool checkForDotfile() @safe {
@@ -44,11 +54,6 @@ private bool checkForDotfile() @safe {
         return false;
     }
     return true;
-}
-
-private ProjectInfo getProjectInfo() @safe {
-    immutable auto contents = readText(".robomake").split(",");
-    return ProjectInfo(contents[0], contents[1]);
 }
 
 /// Processes the "version" command
@@ -163,7 +168,7 @@ bool processBuildCommand(string[] args) @trusted {
 
 private bool _processBuildCommand(in bool tests) @safe {
     if(!checkForDotfile()) return false;
-    immutable auto projectInfo = getProjectInfo();
+    immutable auto projectInfo = ProjectInfo.getFromFile();
 
     writeInfo("Building project \"" ~ projectInfo.name ~ "\" (team " ~ projectInfo.teamNumber ~ ")...");
 
@@ -181,17 +186,20 @@ private bool _processBuildCommand(in bool tests) @safe {
 /// Processes the "test" command
 bool processTestCommand() @trusted {
     if(!checkForDotfile()) return false;
-    //immutable auto projectInfo = getProjectInfo();
+    immutable auto projectInfo = ProjectInfo.getFromFile();
 
-    /*writeInfo("Building tests for project \"" ~ projectInfo.name ~ "\" (team " ~ projectInfo.teamNumber ~ ")...");
+    if(projectInfo.reconfigureNeeded) {
+        writeWarning("Reconfigure needed.");
 
-    if(!buildProject(true)) {
-        writeError("Error while building tests!");
-        return false;
-    }*/
+        switchToBuildDirectory(true);
+        if(!runCMake(true)) return false;
 
-    writeInfo("Running tests...");
-    return runCTest();
+        writeInfo("Running tests...");
+        return runCTest(false);
+    } else {
+        writeInfo("Running tests...");
+        return runCTest();
+    }
 }
 
 /// Processes the "deploy" command
